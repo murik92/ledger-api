@@ -1,11 +1,11 @@
 class TransferService
   MAX_RETRIES = 3
 
-  def self.call(from:, to:, amount_cents:, reference:)
+  def self.call(from:, to:, amount_cents:, reference:, idempotency_key:)
     retries = 0
 
     begin
-      existing_transaction = LedgerTransaction.find_by(reference: reference)
+      existing_transaction = LedgerTransaction.find_by(idempotency_key: idempotency_key)
 
       return existing_transaction if existing_transaction
 
@@ -16,8 +16,9 @@ class TransferService
         raise "Insufficient funds" if from.balance_cents < amount_cents
 
         transaction = LedgerTransaction.create!(
-          reference: reference,
-          status: "completed"
+           reference: reference,
+           idempotency_key: idempotency_key,
+           status: "completed"
         )
 
         Entry.create!(
@@ -56,12 +57,17 @@ class TransferService
         transaction
       end
 
-    rescue ActiveRecord::SerializationFailure
+       rescue ActiveRecord::SerializationFailure
       retries += 1
 
       retry if retries < MAX_RETRIES
 
       raise "Transaction failed after retries"
+
+    rescue ActiveRecord::RecordNotUnique
+      LedgerTransaction.find_by!(
+        idempotency_key: idempotency_key
+      )
     end
   end
 end
