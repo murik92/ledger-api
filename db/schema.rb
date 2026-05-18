@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_05_14_000013) do
+ActiveRecord::Schema[7.1].define(version: 2026_05_15_132749) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -20,6 +20,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_14_000013) do
     t.string "currency"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "opening_balance_cents", default: 0, null: false
   end
 
   create_table "audit_logs", force: :cascade do |t|

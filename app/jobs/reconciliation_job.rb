@@ -28,7 +28,8 @@ class ReconciliationJob
 
   def verify_account_balance(account)
     calculated_balance =
-      account.entries.sum(:amount_cents)
+  account.opening_balance_cents +
+  account.entries.sum(:amount_cents)
 
     stored_balance =
       account.balance_cents
