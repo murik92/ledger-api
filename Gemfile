@@ -44,3 +44,4 @@ end
 gem "rspec-rails", "~> 7.1", :groups => [:development, :test]
 gem "sidekiq"
 gem "redis-client"
+gem "sidekiq-cron"
