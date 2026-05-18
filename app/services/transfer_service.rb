@@ -5,20 +5,31 @@ class TransferService
     retries = 0
 
     begin
-      existing_transaction = LedgerTransaction.find_by(idempotency_key: idempotency_key)
+      validate_transfer!(
+        from: from,
+        to: to,
+        amount_cents: amount_cents
+      )
+
+      existing_transaction =
+        LedgerTransaction.find_by(
+          idempotency_key: idempotency_key
+        )
 
       return existing_transaction if existing_transaction
 
-      ActiveRecord::Base.transaction(isolation: :serializable) do
+      ActiveRecord::Base.transaction(
+        isolation: :serializable
+      ) do
         from.lock!
         to.lock!
 
         raise "Insufficient funds" if from.balance_cents < amount_cents
 
         transaction = LedgerTransaction.create!(
-           reference: reference,
-           idempotency_key: idempotency_key,
-           status: "completed"
+          reference: reference,
+          idempotency_key: idempotency_key,
+          status: "completed"
         )
 
         Entry.create!(
@@ -36,28 +47,31 @@ class TransferService
         )
 
         from.update!(
-          balance_cents: from.balance_cents - amount_cents
+          balance_cents:
+            from.balance_cents - amount_cents
         )
 
         to.update!(
-          balance_cents: to.balance_cents + amount_cents
+          balance_cents:
+            to.balance_cents + amount_cents
         )
-        
+
         AuditLog.create!(
-        action: "transfer_created",
-        entity_type: "LedgerTransaction",
-        entity_id: transaction.id,
-        metadata: {
-          from_account_id: from.id,
-          to_account_id: to.id,
-          amount_cents: amount_cents,
-          reference: reference
-             }
-            )
+          action: "transfer_created",
+          entity_type: "LedgerTransaction",
+          entity_id: transaction.id,
+          metadata: {
+            from_account_id: from.id,
+            to_account_id: to.id,
+            amount_cents: amount_cents,
+            reference: reference
+          }
+        )
+
         transaction
       end
 
-       rescue ActiveRecord::SerializationFailure
+    rescue ActiveRecord::SerializationFailure
       retries += 1
 
       retry if retries < MAX_RETRIES
@@ -68,6 +82,24 @@ class TransferService
       LedgerTransaction.find_by!(
         idempotency_key: idempotency_key
       )
+    end
+  end
+
+  def self.validate_transfer!(
+    from:,
+    to:,
+    amount_cents:
+  )
+    if amount_cents <= 0
+      raise "Amount must be greater than zero"
+    end
+
+    if from.id == to.id
+      raise "Cannot transfer to the same account"
+    end
+
+    if from.currency != to.currency
+      raise "Currency mismatch"
     end
   end
 end
