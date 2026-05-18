@@ -1,6 +1,20 @@
 class LedgerTransaction < ApplicationRecord
   has_many :entries
 
-  validates :reference, presence: true, uniqueness: true
-  validates :status, presence: true
+  enum status: {
+    pending: "pending",
+    completed: "completed",
+    failed: "failed"
+  }
+
+  validates :reference,
+            presence: true,
+            uniqueness: true
+
+  validates :status,
+            presence: true
+
+  validates :idempotency_key,
+            presence: true,
+            uniqueness: true
 end
