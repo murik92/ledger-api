@@ -22,10 +22,12 @@ class TransferService
         isolation: :serializable
       ) do
         from.lock!
-        to.lock!
+          to.lock!
 
-        raise "Insufficient funds" if from.balance_cents < amount_cents
-
+          if from.balance_cents < amount_cents
+          raise StandardError, "Insufficient funds"
+        end
+        
         transaction = LedgerTransaction.create!(
           reference: reference,
           idempotency_key: idempotency_key,

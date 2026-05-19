@@ -1,0 +1,43 @@
+---
+openapi: 3.0.1
+info:
+  title: API V1
+  version: v1
+paths:
+  "/api/v1/transfers":
+    post:
+      summary: Creates money transfer
+      tags:
+      - Transfers
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          type: string
+      responses:
+        '201':
+          description: transfer created
+        '400':
+          description: missing idempotency key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from_account_id:
+                  type: integer
+                to_account_id:
+                  type: integer
+                amount_cents:
+                  type: integer
+                reference:
+                  type: string
+              required:
+              - from_account_id
+              - to_account_id
+              - amount_cents
+              - reference
+servers:
+- url: http://localhost:3000
