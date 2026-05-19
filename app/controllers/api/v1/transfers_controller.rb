@@ -18,7 +18,7 @@ class Api::V1::TransfersController < ApplicationController
     transaction = TransferService.call(
       from: from_account,
       to: to_account,
-      amount_cents: params[:amount_cents],
+      amount_cents: params[:amount_cents].to_i,
       reference: params[:reference],
       idempotency_key: idempotency_key
     )
