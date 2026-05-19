@@ -2,6 +2,34 @@ require 'swagger_helper'
 
 RSpec.describe 'API V1 Transfers', type: :request do
 
+    def create_account_with_balance(
+  name:,
+  currency:,
+  balance_cents:
+)
+  account = Account.create!(
+    name: name,
+    currency: currency,
+    balance_cents: balance_cents,
+    opening_balance_cents: balance_cents
+  )
+
+  transaction = LedgerTransaction.create!(
+    reference: "initial-balance-#{name}-#{SecureRandom.uuid}",
+    status: "completed",
+    idempotency_key: "initial-key-#{name}-#{SecureRandom.uuid}"
+    )
+
+  Entry.create!(
+    account: account,
+    ledger_transaction: transaction,
+    amount_cents: balance_cents,
+    entry_type: "credit"
+  )
+
+  account
+end
+
   path '/api/v1/transfers' do
 
     post 'Creates money transfer' do
@@ -33,20 +61,18 @@ RSpec.describe 'API V1 Transfers', type: :request do
       }
 
       let!(:alice) do
-        Account.create!(
-          name: "Alice",
-          currency: "USD",
-          balance_cents: 100_000,
-          opening_balance_cents: 100_000
+        create_account_with_balance(
+        name: "Alice",
+        currency: "USD",
+        balance_cents: 100_000
         )
       end
 
       let!(:bob) do
-        Account.create!(
-          name: "Bob",
-          currency: "USD",
-          balance_cents: 50_000,
-          opening_balance_cents: 50_000
+        create_account_with_balance(
+        name: "Bob",
+        currency: "USD",
+        balance_cents: 50_000
         )
       end
 
