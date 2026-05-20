@@ -7,6 +7,8 @@ RSpec.describe 'API V1 Transfers', type: :request do
   currency:,
   balance_cents:
 )
+  system = Account.system_account
+
   account = Account.create!(
     name: name,
     currency: currency,
@@ -17,14 +19,27 @@ RSpec.describe 'API V1 Transfers', type: :request do
   transaction = LedgerTransaction.create!(
     reference: "initial-balance-#{name}-#{SecureRandom.uuid}",
     status: "completed",
-    idempotency_key: "initial-key-#{name}-#{SecureRandom.uuid}"
-    )
+    idempotency_key:
+      "initial-key-#{name}-#{SecureRandom.uuid}"
+  )
+
+  Entry.create!(
+    account: system,
+    ledger_transaction: transaction,
+    amount_cents: -balance_cents,
+    entry_type: "debit"
+  )
 
   Entry.create!(
     account: account,
     ledger_transaction: transaction,
     amount_cents: balance_cents,
     entry_type: "credit"
+  )
+
+  system.update!(
+    balance_cents:
+      system.balance_cents - balance_cents
   )
 
   account

@@ -11,7 +11,20 @@ class Account < ApplicationRecord
             }
 
   validates :balance_cents,
-            numericality: {
-              greater_than_or_equal_to: 0
-            }
+            numericality: true,
+            unless: :system_account?
+
+  def system_account?
+  name == "SYSTEM"
+  end
+
+  def self.system_account
+    find_or_create_by!(
+      name: "SYSTEM",
+      currency: "USD"
+    ) do |account|
+      account.balance_cents = 0
+      account.opening_balance_cents = 0
+    end
+  end
 end
