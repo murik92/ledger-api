@@ -1,41 +1,51 @@
 class Api::V1::TransfersController < ApplicationController
+
+  before_action :authenticate_request
+
   def create
-    from_account =
-      Account.find(params[:from_account_id])
+    from_account = current_user.accounts.find(
+      params[:from_account_id]
+    )
 
-    to_account =
-      Account.find(params[:to_account_id])
+    to_account = Account.find(
+      params[:to_account_id]
+    )
 
-    idempotency_key =
-      request.headers["Idempotency-Key"]
+    amount = params[:amount_cents].to_i
 
-    if idempotency_key.blank?
+    if amount <= 0
       return render json: {
-        error: "Idempotency-Key header required"
-      }, status: :bad_request
+        status: "error",
+        message: "Amount must be greater than 0"
+      }, status: :unprocessable_entity
     end
 
-    transaction = TransferService.call(
-      from: from_account,
-      to: to_account,
-      amount_cents: params[:amount_cents].to_i,
-      reference: params[:reference],
-      idempotency_key: idempotency_key
-    )
+    if from_account.balance_cents < amount
+      return render json: {
+        status: "error",
+        message: "Insufficient funds"
+      }, status: :unprocessable_entity
+    end
+
+    ApplicationRecord.transaction do
+
+      from_account.update!(
+        balance_cents: from_account.balance_cents - amount
+      )
+
+      to_account.update!(
+        balance_cents: to_account.balance_cents + amount
+      )
+
+    end
 
     render json: {
       status: "success",
-      transaction_id: transaction.id
-    }, status: :created
-
-  rescue ActiveRecord::RecordNotFound
-    render json: {
-      error: "Account not found"
-    }, status: :not_found
-
-  rescue => e
-    render json: {
-      error: e.message
-    }, status: :unprocessable_entity
+      transfer: {
+        from_account_id: from_account.id,
+        to_account_id: to_account.id,
+        amount_cents: amount
+      }
+    }
   end
 end

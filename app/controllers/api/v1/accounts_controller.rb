@@ -1,5 +1,4 @@
 class Api::V1::AccountsController < ApplicationController
-
   before_action :authenticate_request
 
   def create
@@ -12,13 +11,7 @@ class Api::V1::AccountsController < ApplicationController
 
     render json: {
       status: "success",
-      account: {
-        id: account.id,
-        name: account.name,
-        currency: account.currency,
-        balance_cents: account.balance_cents,
-        user_id: account.user_id
-      }
+      account: account_response(account)
     }, status: :created
   end
 
@@ -28,12 +21,7 @@ class Api::V1::AccountsController < ApplicationController
     render json: {
       status: "success",
       accounts: accounts.map do |account|
-        {
-          id: account.id,
-          name: account.name,
-          currency: account.currency,
-          balance_cents: account.balance_cents
-        }
+        account_response(account)
       end
     }
   end
@@ -43,77 +31,81 @@ class Api::V1::AccountsController < ApplicationController
 
     render json: {
       status: "success",
-      account: {
-        id: account.id,
-        name: account.name,
-        currency: account.currency,
-        balance_cents: account.balance_cents
-      }
+      account: account_response(account)
     }
   end
-  
+
   def deposit
-  account = current_user.accounts.find(params[:id])
+    account = current_user.accounts.find(params[:id])
 
-  amount = params[:amount_cents].to_i
+    amount = params[:amount_cents].to_i
 
-  if amount <= 0
-    return render json: {
-      status: "error",
-      message: "Amount must be greater than 0"
-    }, status: :unprocessable_entity
+    if amount <= 0
+      return render json: {
+        status: "error",
+        message: "Amount must be greater than 0"
+      }, status: :unprocessable_entity
+    end
+
+    ApplicationRecord.transaction do
+      account.update!(
+        balance_cents: account.balance_cents + amount
+      )
+    end
+
+    render json: {
+      status: "success",
+      account: account_response(account)
+    }
   end
 
-  ApplicationRecord.transaction do
-    account.update!(
-      balance_cents: account.balance_cents + amount
+  def withdraw
+    account = current_user.accounts.find(params[:id])
+
+    amount = params[:amount_cents].to_i
+
+    if amount <= 0
+      return render json: {
+        status: "error",
+        message: "Amount must be greater than 0"
+      }, status: :unprocessable_entity
+    end
+
+    if account.balance_cents < amount
+      return render json: {
+        status: "error",
+        message: "Insufficient funds"
+      }, status: :unprocessable_entity
+    end
+
+    ApplicationRecord.transaction do
+      account.update!(
+        balance_cents: account.balance_cents - amount
+      )
+    end
+
+    render json: {
+      status: "success",
+      account: account_response(account)
+    }
+  end
+
+  private
+
+  def account_params
+    params.require(:account).permit(
+      :name,
+      :currency
     )
   end
 
-  render json: {
-    status: "success",
-    account: {
+  def account_response(account)
+    {
       id: account.id,
       name: account.name,
       currency: account.currency,
-      balance_cents: account.balance_cents
+      balance_cents: account.balance_cents,
+      user_id: account.user_id
     }
-  }
-end
-
-def withdraw
-  account = current_user.accounts.find(params[:id])
-
-  amount = params[:amount_cents].to_i
-
-  if amount <= 0
-    return render json: {
-      status: "error",
-      message: "Amount must be greater than 0"
-    }, status: :unprocessable_entity
   end
-
-  if account.balance_cents < amount
-    return render json: {
-      status: "error",
-      message: "Insufficient funds"
-    }, status: :unprocessable_entity
-  end
-
-  ApplicationRecord.transaction do
-    account.update!(
-      balance_cents: account.balance_cents - amount
-    )
-  end
-
-  render json: {
-    status: "success",
-    account: {
-      id: account.id,
-      name: account.name,
-      currency: account.currency,
-      balance_cents: account.balance_cents
-    }
-  }
-end
 end
