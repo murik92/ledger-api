@@ -1,5 +1,4 @@
 class Api::V1::TransfersController < ApplicationController
-
   before_action :authenticate_request
 
   def create
@@ -12,6 +11,14 @@ class Api::V1::TransfersController < ApplicationController
     )
 
     amount = params[:amount_cents].to_i
+    idempotency_key = params[:idempotency_key]
+
+    if idempotency_key.blank?
+      return render json: {
+        status: "error",
+        message: "Idempotency key is required"
+      }, status: :bad_request
+    end
 
     if amount <= 0
       return render json: {
@@ -28,7 +35,6 @@ class Api::V1::TransfersController < ApplicationController
     end
 
     ApplicationRecord.transaction do
-
       from_account.update!(
         balance_cents: from_account.balance_cents - amount
       )
@@ -36,7 +42,6 @@ class Api::V1::TransfersController < ApplicationController
       to_account.update!(
         balance_cents: to_account.balance_cents + amount
       )
-
     end
 
     render json: {
@@ -46,6 +51,6 @@ class Api::V1::TransfersController < ApplicationController
         to_account_id: to_account.id,
         amount_cents: amount
       }
-    }
+    }, status: :created
   end
 end

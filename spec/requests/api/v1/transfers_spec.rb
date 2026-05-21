@@ -1,126 +1,87 @@
 require 'swagger_helper'
 
 RSpec.describe 'API V1 Transfers', type: :request do
-
-    def create_account_with_balance(
-  name:,
-  currency:,
-  balance_cents:
-)
-  system = Account.system_account
-
-  account = Account.create!(
-    name: name,
-    currency: currency,
-    balance_cents: balance_cents,
-    opening_balance_cents: balance_cents
-  )
-
-  transaction = LedgerTransaction.create!(
-    reference: "initial-balance-#{name}-#{SecureRandom.uuid}",
-    status: "completed",
-    idempotency_key:
-      "initial-key-#{name}-#{SecureRandom.uuid}"
-  )
-
-  Entry.create!(
-    account: system,
-    ledger_transaction: transaction,
-    amount_cents: -balance_cents,
-    entry_type: "debit"
-  )
-
-  Entry.create!(
-    account: account,
-    ledger_transaction: transaction,
-    amount_cents: balance_cents,
-    entry_type: "credit"
-  )
-
-  system.update!(
-    balance_cents:
-      system.balance_cents - balance_cents
-  )
-
-  account
-end
-
   path '/api/v1/transfers' do
-
-    post 'Creates money transfer' do
-
+    post 'Create transfer' do
       tags 'Transfers'
-
       consumes 'application/json'
       produces 'application/json'
 
-      parameter name: :'Idempotency-Key',
-          in: :header,
-          type: :string,
-          required: false
+      parameter name: :Authorization,
+                in: :header,
+                type: :string,
+                required: true
 
-      parameter name: :transfer, in: :body, schema: {
-        type: :object,
-        properties: {
-          from_account_id: { type: :integer },
-          to_account_id: { type: :integer },
-          amount_cents: { type: :integer },
-          reference: { type: :string }
-        },
-        required: [
-          'from_account_id',
-          'to_account_id',
-          'amount_cents',
-          'reference'
-        ]
-      }
+      parameter name: :transfer,
+                in: :body,
+                schema: {
+                  type: :object,
+                  properties: {
+                    from_account_id: { type: :integer },
+                    to_account_id: { type: :integer },
+                    amount_cents: { type: :integer },
+                    idempotency_key: { type: :string }
+                  },
+                  required: %w[
+                    from_account_id
+                    to_account_id
+                    amount_cents
+                    idempotency_key
+                  ]
+                }
 
-      let!(:alice) do
-        create_account_with_balance(
-        name: "Alice",
-        currency: "USD",
-        balance_cents: 100_000
+      let(:user) do
+        User.create!(
+        email: Faker::Internet.unique.email,
+         password: 'password123'
         )
       end
 
-      let!(:bob) do
-        create_account_with_balance(
-        name: "Bob",
-        currency: "USD",
-        balance_cents: 50_000
+      let!(:from_account) do
+        user.accounts.create!(
+          name: 'Main Account',
+          currency: 'USD',
+          balance_cents: 10_000,
+          opening_balance_cents: 10_000
         )
       end
 
-      let(:transfer) do
-        {
-          from_account_id: alice.id,
-          to_account_id: bob.id,
-          amount_cents: 10_000,
-          reference: "swagger-transfer-001"
-        }
+      let!(:to_account) do
+        user.accounts.create!(
+          name: 'Savings Account',
+          currency: 'USD',
+          balance_cents: 0,
+          opening_balance_cents: 0
+        )
+      end
+
+      let(:token) do
+        JsonWebToken.encode(user_id: user.id)
+      end
+
+      let(:Authorization) do
+        "Bearer #{token}"
       end
 
       response '201', 'transfer created' do
-
-        let('Idempotency-Key') { 'swagger-key-001' }
-
-        run_test! do |response|
-          body = JSON.parse(response.body)
-
-          expect(body['status']).to eq('success')
+        let(:transfer) do
+          {
+            from_account_id: from_account.id,
+            to_account_id: to_account.id,
+            amount_cents: 1000,
+            idempotency_key: SecureRandom.uuid
+          }
         end
+
+        run_test!
       end
 
       response '400', 'missing idempotency key' do
-
-        let(:'Idempotency-Key') { nil }
-
         let(:transfer) do
           {
-            from_account_id: alice.id,
-            to_account_id: bob.id,
-            amount_cents: 10_000,
-            reference: "swagger-transfer-002"
+            from_account_id: from_account.id,
+            to_account_id: to_account.id,
+            amount_cents: 1000
           }
         end
 

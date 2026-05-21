@@ -49,3 +49,7 @@ gem "sidekiq-cron"
 gem 'rswag'
 gem 'rswag-api'
 gem 'rswag-ui'
+
+group :test do
+  gem 'faker'
+end
