@@ -71,22 +71,49 @@ class Api::V1::AccountsController < ApplicationController
   end
 
   render json: {
-     status: "success",
-     account: {
-       id: account.id,
-       name: account.name,
-       currency: account.currency,
-       balance_cents: account.balance_cents
-      }
+    status: "success",
+    account: {
+      id: account.id,
+      name: account.name,
+      currency: account.currency,
+      balance_cents: account.balance_cents
     }
+  }
+end
+
+def withdraw
+  account = current_user.accounts.find(params[:id])
+
+  amount = params[:amount_cents].to_i
+
+  if amount <= 0
+    return render json: {
+      status: "error",
+      message: "Amount must be greater than 0"
+    }, status: :unprocessable_entity
   end
 
-  private
+  if account.balance_cents < amount
+    return render json: {
+      status: "error",
+      message: "Insufficient funds"
+    }, status: :unprocessable_entity
+  end
 
-  def account_params
-    params.require(:account).permit(
-      :name,
-      :currency
+  ApplicationRecord.transaction do
+    account.update!(
+      balance_cents: account.balance_cents - amount
     )
   end
+
+  render json: {
+    status: "success",
+    account: {
+      id: account.id,
+      name: account.name,
+      currency: account.currency,
+      balance_cents: account.balance_cents
+    }
+  }
+end
 end
