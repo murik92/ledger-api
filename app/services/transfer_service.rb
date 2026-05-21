@@ -10,6 +10,10 @@ class TransferService
         to: to,
         amount_cents: amount_cents
       )
+      if idempotency_key.blank?
+          raise BadRequestError,
+        "Idempotency key is required"
+      end
 
       existing_transaction =
         LedgerTransaction.find_by(
