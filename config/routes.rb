@@ -6,11 +6,16 @@ Rails.application.routes.draw do
    namespace :v1 do
      get "health", to: "health#index"
 
+      post "accounts/:id/deposit", to: "accounts#deposit"
       post "transfers", to: "transfers#create"
       post "register", to: "users#create"
       post "login", to: "auth#login"
+      post "accounts", to: "accounts#create"
+      get "accounts", to: "accounts#index"
+      get "accounts/:id", to: "accounts#show"
 
       get "profile", to: "users#profile"
+      
     end
   end
 end

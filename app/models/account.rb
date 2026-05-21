@@ -1,4 +1,7 @@
 class Account < ApplicationRecord
+  
+  belongs_to :user, optional: true
+
   has_many :entries
 
   validates :name, presence: true
@@ -15,7 +18,7 @@ class Account < ApplicationRecord
             unless: :system_account?
 
   def system_account?
-  name == "SYSTEM"
+    name == "SYSTEM"
   end
 
   def self.system_account
