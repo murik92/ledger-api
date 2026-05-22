@@ -56,13 +56,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_20_134107) do
     t.index ["idempotency_key"], name: "index_ledger_transactions_on_idempotency_key", unique: true
   end
 
-  create_table "transactions", force: :cascade do |t|
-    t.string "reference"
-    t.string "status"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
-
   create_table "users", force: :cascade do |t|
     t.string "email"
     t.string "password_digest"
