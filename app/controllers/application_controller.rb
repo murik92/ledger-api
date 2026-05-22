@@ -1,4 +1,5 @@
 class ApplicationController < ActionController::API
+  rescue_from StandardError, with: :handle_internal_error
 
   attr_reader :current_user
 
@@ -21,5 +22,11 @@ class ApplicationController < ActionController::API
         message: "Unauthorized"
       }, status: :unauthorized
     end
+  end
+
+  def handle_internal_error(error)
+    render json: {
+      error: error.message
+    }, status: :unprocessable_entity
   end
 end

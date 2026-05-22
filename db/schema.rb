@@ -49,13 +49,24 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_22_110558) do
     t.check_constraint "entry_type::text = ANY (ARRAY['debit'::character varying, 'credit'::character varying]::text[])", name: "entries_valid_entry_type"
   end
 
-create_table "ledger_transactions", force: :cascade do |t|
-  t.string "reference"
-  t.string "status"
-  t.datetime "created_at", null: false
-  t.datetime "updated_at", null: false
-  t.string "idempotency_key"
-  t.index ["idempotency_key"], name: "index_ledger_transactions_on_idempotency_key", unique: true
-  t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'completed'::character varying, 'failed'::character varying]::text[])", name: "ledger_transactions_valid_status"
+  create_table "ledger_transactions", force: :cascade do |t|
+    t.string "reference"
+    t.string "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "idempotency_key"
+    t.index ["idempotency_key"], name: "index_ledger_transactions_on_idempotency_key", unique: true
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'completed'::character varying, 'failed'::character varying]::text[])", name: "ledger_transactions_valid_status"
+  end
+  create_table "users", force: :cascade do |t|
+    t.string "email"
+    t.string "password_digest"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  add_foreign_key "accounts", "users"
+  add_foreign_key "entries", "accounts"
+  add_foreign_key "entries", "ledger_transactions"
 end
 
