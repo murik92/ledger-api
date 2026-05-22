@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_05_20_134107) do
+ActiveRecord::Schema[7.1].define(version: 2026_05_22_110558) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -23,6 +23,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_20_134107) do
     t.bigint "opening_balance_cents", default: 0, null: false
     t.bigint "user_id"
     t.index ["user_id"], name: "index_accounts_on_user_id"
+    t.check_constraint "opening_balance_cents >= 0", name: "accounts_opening_balance_non_negative"
   end
 
   create_table "audit_logs", force: :cascade do |t|
@@ -45,6 +46,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_20_134107) do
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_entries_on_account_id"
     t.index ["ledger_transaction_id"], name: "index_entries_on_ledger_transaction_id"
+    t.check_constraint "entry_type::text = ANY (ARRAY['debit'::character varying, 'credit'::character varying]::text[])", name: "entries_valid_entry_type"
   end
 
   create_table "ledger_transactions", force: :cascade do |t|
@@ -54,13 +56,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_20_134107) do
     t.datetime "updated_at", null: false
     t.string "idempotency_key"
     t.index ["idempotency_key"], name: "index_ledger_transactions_on_idempotency_key", unique: true
-  end
-
-  create_table "transactions", force: :cascade do |t|
-    t.string "reference"
-    t.string "status"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'completed'::character varying, 'failed'::character varying]::text[])", name: "ledger_transactions_valid_status"
   end
 
   create_table "users", force: :cascade do |t|
