@@ -1,6 +1,6 @@
 class LedgerTransaction < ApplicationRecord
   has_many :entries,
-           dependent: :destroy
+           dependent: :restrict_with_exception
 
   enum status: {
     pending: "pending",

@@ -79,11 +79,11 @@ class TransferService
       end
 
     rescue ActiveRecord::SerializationFailure
-    retries += 1
+      retries += 1
 
       if retries < MAX_RETRIES
-       backoff_time =
-       (0.05 * (2 ** retries)) + rand(0.0..0.05)
+        backoff_time =
+        (0.05 * (2 ** retries)) + rand(0.0..0.05)
 
        sleep(backoff_time)
 
@@ -117,3 +117,4 @@ class TransferService
     end
   end
 end
+
