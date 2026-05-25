@@ -10,19 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_05_25_121514) do
+ActiveRecord::Schema[7.1].define(version: 2026_05_25_123559) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
   create_table "accounts", force: :cascade do |t|
     t.string "name"
-    t.bigint "balance_cents"
-    t.string "currency"
+    t.bigint "balance_cents", null: false
+    t.string "currency", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "opening_balance_cents", default: 0, null: false
     t.bigint "user_id"
     t.index ["user_id"], name: "index_accounts_on_user_id"
+    t.check_constraint "name::text = 'SYSTEM'::text OR balance_cents >= 0", name: "accounts_balance_non_negative"
     t.check_constraint "opening_balance_cents >= 0", name: "accounts_opening_balance_non_negative"
   end
 
@@ -40,18 +41,19 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_25_121514) do
   create_table "entries", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "ledger_transaction_id", null: false
-    t.bigint "amount_cents"
-    t.string "entry_type"
+    t.bigint "amount_cents", null: false
+    t.string "entry_type", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_entries_on_account_id"
     t.index ["ledger_transaction_id"], name: "index_entries_on_ledger_transaction_id"
+    t.check_constraint "amount_cents <> 0", name: "entries_amount_non_zero"
     t.check_constraint "entry_type::text = ANY (ARRAY['debit'::character varying, 'credit'::character varying]::text[])", name: "entries_valid_entry_type"
   end
 
   create_table "ledger_transactions", force: :cascade do |t|
-    t.string "reference"
-    t.string "status"
+    t.string "reference", null: false
+    t.string "status", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "idempotency_key"
