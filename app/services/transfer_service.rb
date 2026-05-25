@@ -25,8 +25,9 @@ class TransferService
       ActiveRecord::Base.transaction(
         isolation: :serializable
       ) do
-        from.lock!
-          to.lock!
+        accounts = [from, to].sort_by(&:id)
+
+        accounts.each(&:lock!)
 
           if from.balance_cents < amount_cents
           raise StandardError, "Insufficient funds"
