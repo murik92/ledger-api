@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_05_22_110558) do
+ActiveRecord::Schema[7.1].define(version: 2026_05_25_121514) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -58,6 +58,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_22_110558) do
     t.index ["idempotency_key"], name: "index_ledger_transactions_on_idempotency_key", unique: true
     t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'completed'::character varying, 'failed'::character varying]::text[])", name: "ledger_transactions_valid_status"
   end
+
   create_table "users", force: :cascade do |t|
     t.string "email"
     t.string "password_digest"
@@ -69,4 +70,3 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_22_110558) do
   add_foreign_key "entries", "accounts"
   add_foreign_key "entries", "ledger_transactions"
 end
-
