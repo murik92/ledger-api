@@ -79,11 +79,18 @@ class TransferService
       end
 
     rescue ActiveRecord::SerializationFailure
-      retries += 1
+    retries += 1
 
-      retry if retries < MAX_RETRIES
+      if retries < MAX_RETRIES
+       backoff_time =
+       (0.05 * (2 ** retries)) + rand(0.0..0.05)
 
-      raise "Transaction failed after retries"
+       sleep(backoff_time)
+
+      retry
+    end
+
+    raise "Transaction failed after retries"
 
     rescue ActiveRecord::RecordNotUnique
       LedgerTransaction.find_by!(
