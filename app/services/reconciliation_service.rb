@@ -8,6 +8,10 @@ class ReconciliationService
       validate_account!(account)
     end
 
+    LedgerTransaction.find_each do |transaction|
+      validate_transaction!(transaction)
+    end
+
     puts "Reconciliation completed"
   end
 
@@ -37,5 +41,18 @@ class ReconciliationService
     end
 
     puts "Account #{account.id} balance verified"
+  end
+
+  def self.validate_transaction!(transaction)
+    total =
+      transaction.entries.sum(:amount_cents)
+
+    if total != 0
+      raise(
+        "Transaction #{transaction.id} invariant violated: #{total}"
+      )
+    end
+
+    puts "Transaction #{transaction.id} verified"
   end
 end
