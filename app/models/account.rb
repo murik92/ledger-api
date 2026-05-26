@@ -2,7 +2,8 @@ class Account < ApplicationRecord
   
   belongs_to :user, optional: true
 
-  has_many :entries
+  has_many :entries,
+         dependent: :restrict_with_exception
 
   validates :name, presence: true
 
@@ -31,3 +32,4 @@ class Account < ApplicationRecord
     end
   end
 end
+
