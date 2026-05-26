@@ -5,6 +5,8 @@ class ReconciliationService
     validate_global_invariant!
 
     Account.find_each do |account|
+      next if account.system_account?
+
       validate_account!(account)
     end
 
