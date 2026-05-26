@@ -18,4 +18,7 @@ class LedgerTransaction < ApplicationRecord
   validates :idempotency_key,
             presence: true,
             uniqueness: true
+
+  validates :request_fingerprint,
+            presence: true
 end

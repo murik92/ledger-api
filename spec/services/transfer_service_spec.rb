@@ -28,8 +28,10 @@ RSpec.describe TransferService do
         "initial-balance-#{name}-#{SecureRandom.uuid}",
       status: "completed",
       idempotency_key:
-        "initial-key-#{name}-#{SecureRandom.uuid}"
-    )
+        "initial-key-#{name}-#{SecureRandom.uuid}",
+      request_fingerprint:
+        SecureRandom.hex
+    ) 
 
     Entry.create!(
       account: system,

@@ -5,14 +5,26 @@ class TransferService
     retries = 0
 
     begin
+      fingerprint_payload = {
+        from_account_id: from.id,
+        to_account_id: to.id,
+        amount_cents: amount_cents
+      }
+
+      request_fingerprint =
+        Digest::SHA256.hexdigest(
+          fingerprint_payload.to_json
+        )
+
       validate_transfer!(
         from: from,
         to: to,
         amount_cents: amount_cents
       )
+
       if idempotency_key.blank?
-          raise BadRequestError,
-        "Idempotency key is required"
+        raise BadRequestError,
+              "Idempotency key is required"
       end
 
       existing_transaction =
@@ -20,7 +32,14 @@ class TransferService
           idempotency_key: idempotency_key
         )
 
-      return existing_transaction if existing_transaction
+      if existing_transaction
+        if existing_transaction.request_fingerprint != request_fingerprint
+          raise StandardError,
+                "Idempotency key reuse with different payload"
+        end
+
+        return existing_transaction
+      end
 
       ActiveRecord::Base.transaction(
         isolation: :serializable
@@ -29,13 +48,15 @@ class TransferService
 
         accounts.each(&:lock!)
 
-          if from.balance_cents < amount_cents
-          raise StandardError, "Insufficient funds"
+        if from.balance_cents < amount_cents
+          raise StandardError,
+                "Insufficient funds"
         end
-        
+
         transaction = LedgerTransaction.create!(
           reference: reference,
           idempotency_key: idempotency_key,
+          request_fingerprint: request_fingerprint,
           status: "completed"
         )
 
@@ -83,14 +104,15 @@ class TransferService
 
       if retries < MAX_RETRIES
         backoff_time =
-        (0.05 * (2 ** retries)) + rand(0.0..0.05)
+          (0.05 * (2 ** retries)) +
+          rand(0.0..0.05)
 
-       sleep(backoff_time)
+        sleep(backoff_time)
 
-      retry
-    end
+        retry
+      end
 
-    raise "Transaction failed after retries"
+      raise "Transaction failed after retries"
 
     rescue ActiveRecord::RecordNotUnique
       LedgerTransaction.find_by!(
@@ -117,4 +139,3 @@ class TransferService
     end
   end
 end
-
