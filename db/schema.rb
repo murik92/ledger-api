@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_05_26_102510) do
+ActiveRecord::Schema[7.1].define(version: 2026_05_27_122255) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -70,7 +70,26 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_26_102510) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "wallets", force: :cascade do |t|
+    t.bigint "user_id"
+    t.bigint "account_id", null: false
+    t.string "currency", null: false
+    t.string "status", default: "active", null: false
+    t.string "wallet_type", default: "user", null: false
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_wallets_on_account_id"
+    t.index ["name", "currency"], name: "index_system_wallets_unique", unique: true, where: "((wallet_type)::text = 'system'::text)"
+    t.index ["user_id", "currency"], name: "index_user_wallets_on_currency_unique", unique: true, where: "((wallet_type)::text = 'user'::text)"
+    t.index ["user_id"], name: "index_wallets_on_user_id"
+    t.check_constraint "status::text = ANY (ARRAY['active'::character varying, 'frozen'::character varying, 'archived'::character varying]::text[])", name: "wallets_valid_status"
+    t.check_constraint "wallet_type::text = ANY (ARRAY['user'::character varying, 'system'::character varying]::text[])", name: "wallets_valid_type"
+  end
+
   add_foreign_key "accounts", "users"
   add_foreign_key "entries", "accounts"
   add_foreign_key "entries", "ledger_transactions"
+  add_foreign_key "wallets", "accounts"
+  add_foreign_key "wallets", "users"
 end

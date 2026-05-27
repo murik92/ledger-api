@@ -1,8 +1,11 @@
 class User < ApplicationRecord
   has_secure_password
 
+  has_many :wallets,
+         dependent: :restrict_with_exception
+
   has_many :accounts,
-           dependent: :destroy
+           dependent: :restrict_with_exception
 
   validates :email,
             presence: true,

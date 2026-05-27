@@ -2,6 +2,9 @@ class Account < ApplicationRecord
   
   belongs_to :user, optional: true
 
+  has_one :wallet,
+        dependent: :restrict_with_exception
+
   has_many :entries,
          dependent: :restrict_with_exception
 

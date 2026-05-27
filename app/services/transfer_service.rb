@@ -1,7 +1,13 @@
 class TransferService
   MAX_RETRIES = 3
 
-  def self.call(from:, to:, amount_cents:, reference:, idempotency_key:)
+  def self.call(
+    from:,
+    to:,
+    amount_cents:,
+    reference:,
+    idempotency_key:
+  )
     retries = 0
 
     begin
@@ -136,6 +142,26 @@ class TransferService
 
     if from.currency != to.currency
       raise "Currency mismatch"
+    end
+
+    if from.wallet.present?
+      unless from.wallet.mutable?
+        raise "Sender wallet is archived"
+      end
+
+      unless from.wallet.can_send?
+        raise "Sender wallet cannot send transfers"
+      end
+    end
+
+    if to.wallet.present?
+      unless to.wallet.mutable?
+        raise "Receiver wallet is archived"
+      end
+
+      unless to.wallet.can_receive?
+        raise "Receiver wallet cannot receive transfers"
+      end
     end
   end
 end
