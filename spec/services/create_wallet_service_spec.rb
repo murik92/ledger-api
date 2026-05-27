@@ -2,6 +2,7 @@ require "rails_helper"
 
 RSpec.describe Wallet::CreateWalletService do
   before(:each) do
+    Category.delete_all
     Wallet.delete_all
     Entry.delete_all
     LedgerTransaction.delete_all
