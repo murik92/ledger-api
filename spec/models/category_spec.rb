@@ -116,4 +116,43 @@ RSpec.describe Category, type: :model do
       ).to eq(true)
     end
   end
+  
+  describe "policy methods" do
+  it "checks category ownership" do
+    category = Category.new(
+      user: user,
+      name: "Food",
+      category_type: "expense"
+    )
+
+    expect(
+      category.owned_by?(user)
+    ).to eq(true)
+  end
+
+  it "supports expense category helper" do
+    category = Category.new(
+      user: user,
+      name: "Food",
+      category_type: "expense"
+    )
+
+    expect(
+      category.expense_category?
+    ).to eq(true)
+  end
+
+  it "supports income category helper" do
+    category = Category.new(
+      user: user,
+      name: "Salary",
+      category_type: "income"
+    )
+
+    expect(
+      category.income_category?
+    ).to eq(true)
+    end
+  end
+
 end

@@ -1,6 +1,18 @@
 class Category < ApplicationRecord
   belongs_to :user
 
+  def owned_by?(user)
+    self.user == user
+  end
+
+  def expense_category?
+    category_type_expense?
+  end
+
+  def income_category?
+    category_type_income?
+  end
+
   enum category_type: {
     expense: "expense",
     income: "income"
