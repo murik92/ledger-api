@@ -2,6 +2,9 @@ class LedgerTransaction < ApplicationRecord
   has_many :entries,
            dependent: :restrict_with_exception
 
+  has_one :categorized_transaction,
+        dependent: :restrict_with_exception
+        
   enum status: {
     pending: "pending",
     completed: "completed",

@@ -2,13 +2,14 @@ require "rails_helper"
 
 RSpec.describe Category::CreateCategoryService do
     before do
-        Category.delete_all
-        Wallet.delete_all
-        Entry.delete_all
-        LedgerTransaction.delete_all
-        Account.delete_all
-        User.delete_all
-    end
+      CategorizedTransaction.delete_all
+      Category.delete_all
+      Wallet.delete_all
+      Entry.delete_all
+      LedgerTransaction.delete_all
+      Account.delete_all
+      User.delete_all
+    end 
 
   let(:user) do
     User.create!(

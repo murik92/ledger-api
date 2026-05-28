@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_05_27_144520) do
+ActiveRecord::Schema[7.1].define(version: 2026_05_28_113743) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -46,6 +46,20 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_27_144520) do
     t.datetime "updated_at", null: false
     t.index ["user_id", "name", "category_type"], name: "index_categories_uniqueness", unique: true
     t.index ["user_id"], name: "index_categories_on_user_id"
+  end
+
+  create_table "categorized_transactions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "ledger_transaction_id", null: false
+    t.bigint "category_id", null: false
+    t.string "transaction_type", null: false
+    t.text "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["category_id"], name: "index_categorized_transactions_on_category_id"
+    t.index ["ledger_transaction_id"], name: "index_categorized_transactions_on_ledger_transaction_id"
+    t.index ["ledger_transaction_id"], name: "index_unique_categorized_transaction", unique: true
+    t.index ["user_id"], name: "index_categorized_transactions_on_user_id"
   end
 
   create_table "entries", force: :cascade do |t|
@@ -99,6 +113,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_27_144520) do
 
   add_foreign_key "accounts", "users"
   add_foreign_key "categories", "users"
+  add_foreign_key "categorized_transactions", "categories"
+  add_foreign_key "categorized_transactions", "ledger_transactions"
+  add_foreign_key "categorized_transactions", "users"
   add_foreign_key "entries", "accounts"
   add_foreign_key "entries", "ledger_transactions"
   add_foreign_key "wallets", "accounts"

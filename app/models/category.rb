@@ -1,6 +1,9 @@
 class Category < ApplicationRecord
   belongs_to :user
 
+  has_many :categorized_transactions,
+         dependent: :restrict_with_exception
+         
   def owned_by?(user)
     self.user == user
   end

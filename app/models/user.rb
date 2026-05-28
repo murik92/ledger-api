@@ -1,6 +1,9 @@
 class User < ApplicationRecord
   has_secure_password
 
+  has_many :categorized_transactions,
+         dependent: :restrict_with_exception
+         
   has_many :wallets,
            dependent: :restrict_with_exception
 

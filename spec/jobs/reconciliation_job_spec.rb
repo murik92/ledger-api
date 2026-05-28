@@ -2,6 +2,7 @@ require 'rails_helper'
 
 RSpec.describe ReconciliationJob, type: :job do
   before(:each) do
+    CategorizedTransaction.delete_all
     Wallet.delete_all
     Entry.delete_all
     LedgerTransaction.delete_all
