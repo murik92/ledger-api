@@ -4,6 +4,8 @@ Rails.application.routes.draw do
 
   namespace :api do
    namespace :v1 do
+    resources :expenses, only: [:create]
+    resources :incomes, only: [:create]
      get "health", to: "health#index"
 
       post "accounts/:id/deposit", to: "accounts#deposit"

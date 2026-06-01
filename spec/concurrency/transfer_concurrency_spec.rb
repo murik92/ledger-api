@@ -18,7 +18,8 @@ RSpec.describe "Transfer concurrency" do
     if balance > 0
       AccountFundingService.call(
         account: account,
-        amount_cents: balance
+        amount_cents: balance,
+        idempotency_key: SecureRandom.uuid
       )
     end
 

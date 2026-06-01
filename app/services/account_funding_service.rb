@@ -1,7 +1,11 @@
 class AccountFundingService
   MAX_RETRIES = 3
 
-  def self.call(account:, amount_cents:)
+    def self.call(
+      account:,
+      amount_cents:,
+      idempotency_key:
+    )
     retries = 0
 
     begin

@@ -8,6 +8,14 @@ RSpec.describe Transactions::CreateExpenseTransactionService do
     )
   end
 
+  let(:wallet) do
+    Wallet::CreateWalletService.call(
+      user: user,
+      currency: "USD",
+      name: "Main wallet"
+    )
+  end
+
   let(:expense_category) do
     Category.create!(
       user: user,
@@ -24,11 +32,21 @@ RSpec.describe Transactions::CreateExpenseTransactionService do
     )
   end
 
+  before do
+    AccountFundingService.call(
+      account: wallet.account,
+      amount_cents: 10_000,
+      idempotency_key: SecureRandom.uuid
+    )
+  end
+
   describe ".call" do
     it "creates expense categorized transaction" do
       result = described_class.call(
         user: user,
+        wallet: wallet,
         category: expense_category,
+        amount_cents: 5_000,
         note: "Dinner"
       )
 
@@ -50,7 +68,9 @@ RSpec.describe Transactions::CreateExpenseTransactionService do
     it "creates ledger transaction" do
       result = described_class.call(
         user: user,
+        wallet: wallet,
         category: expense_category,
+        amount_cents: 5_000,
         note: "Dinner"
       )
 
@@ -63,7 +83,9 @@ RSpec.describe Transactions::CreateExpenseTransactionService do
       expect do
         described_class.call(
           user: user,
+          wallet: wallet,
           category: income_category,
+          amount_cents: 5_000,
           note: "Invalid"
         )
       end.to raise_error(
