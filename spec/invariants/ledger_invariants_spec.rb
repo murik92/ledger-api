@@ -11,7 +11,8 @@ RSpec.describe "Ledger invariants" do
 
     AccountFundingService.call(
       account: account,
-      amount_cents: balance
+      amount_cents: balance,
+      idempotency_key: SecureRandom.uuid
     )
 
     account.reload
