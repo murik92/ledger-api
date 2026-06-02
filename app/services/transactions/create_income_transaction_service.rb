@@ -4,7 +4,8 @@ class Transactions::CreateIncomeTransactionService
     wallet:,
     category:,
     amount_cents:,
-    note:
+    note:,
+    idempotency_key:
   )
     unless category.category_type_income?
       raise ArgumentError, "Category must be income type"
@@ -14,16 +15,25 @@ class Transactions::CreateIncomeTransactionService
       raise ArgumentError, "Wallet does not belong to user"
     end
 
+    existing_transaction =
+      LedgerTransaction.find_by(
+        idempotency_key: idempotency_key
+      )
+
+    return existing_transaction if existing_transaction
+
     ledger_transaction = LedgerTransaction.create!(
       reference: SecureRandom.uuid,
       status: "completed",
-      idempotency_key: SecureRandom.uuid,
+      idempotency_key: idempotency_key,
       request_fingerprint: SecureRandom.uuid
     )
 
-    wallet.account.increment!(
-      :balance_cents,
-      amount_cents
+    wallet.account.reload
+
+    wallet.account.update!(
+      balance_cents:
+        wallet.account.balance_cents + amount_cents
     )
 
     CategorizedTransaction.create!(

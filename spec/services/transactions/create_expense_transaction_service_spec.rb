@@ -47,7 +47,8 @@ RSpec.describe Transactions::CreateExpenseTransactionService do
         wallet: wallet,
         category: expense_category,
         amount_cents: 5_000,
-        note: "Dinner"
+        note: "Dinner",
+        idempotency_key: SecureRandom.uuid
       )
 
       expect(result).to be_persisted
@@ -71,7 +72,8 @@ RSpec.describe Transactions::CreateExpenseTransactionService do
         wallet: wallet,
         category: expense_category,
         amount_cents: 5_000,
-        note: "Dinner"
+        note: "Dinner",
+        idempotency_key: SecureRandom.uuid
       )
 
       expect(
@@ -86,12 +88,46 @@ RSpec.describe Transactions::CreateExpenseTransactionService do
           wallet: wallet,
           category: income_category,
           amount_cents: 5_000,
-          note: "Invalid"
+          note: "Invalid",
+          idempotency_key: SecureRandom.uuid
         )
       end.to raise_error(
         ArgumentError,
         "Category must be expense type"
       )
+    end
+
+    it "does not create duplicate expense with same idempotency key" do
+      key = "expense-key-001"
+
+      described_class.call(
+        user: user,
+        wallet: wallet,
+        category: expense_category,
+        amount_cents: 5_000,
+        note: "Dinner",
+        idempotency_key: key
+      )
+     
+      described_class.call(
+        user: user,
+        wallet: wallet,
+        category: expense_category,
+        amount_cents: 5_000,
+        note: "Dinner",
+        idempotency_key: key
+      )
+
+      
+      expect(
+        LedgerTransaction.where(
+          idempotency_key: key
+        ).count
+      ).to eq(1)
+
+      expect(
+        wallet.account.reload.balance_cents
+      ).to eq(5_000)
     end
   end
 end

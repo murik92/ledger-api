@@ -150,7 +150,7 @@ RSpec.describe TransferService do
                 idempotency_key: "concurrent-key-#{i}"
               )
             rescue => e
-              puts e.message
+            
             end
           end
         end

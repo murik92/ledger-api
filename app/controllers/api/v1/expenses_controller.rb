@@ -6,13 +6,14 @@ class Api::V1::ExpensesController < ApplicationController
       Transactions::CreateExpenseTransactionService.call(
         user: current_user,
         wallet: Wallet.find(
-        expense_params[:wallet_id]
+          expense_params[:wallet_id]
         ),
         category: Category.find(
-        expense_params[:category_id]
+          expense_params[:category_id]
         ),
         amount_cents: expense_params[:amount_cents].to_i,
-        note: expense_params[:note]
+        note: expense_params[:note],
+        idempotency_key: expense_params[:idempotency_key]
       )
 
     render json: {
@@ -28,12 +29,13 @@ class Api::V1::ExpensesController < ApplicationController
 
   private
 
-  def expense_params
-    params.permit(
-      :wallet_id,
-      :category_id,
-      :amount_cents,
-      :note
-    )
-  end
+    def expense_params
+      params.permit(
+        :wallet_id,
+        :category_id,
+        :amount_cents,
+        :note,
+        :idempotency_key
+      )
+    end
 end

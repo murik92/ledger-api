@@ -56,7 +56,8 @@ RSpec.describe "Api::V1::Expenses", type: :request do
         wallet_id: wallet.id,
         category_id: category.id,
         amount_cents: 5000,
-        note: "Restaurant"
+        note: "Restaurant",
+        idempotency_key: SecureRandom.uuid
       },
       headers: {
         "Authorization" => "Bearer #{token}"

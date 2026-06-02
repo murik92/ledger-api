@@ -20,12 +20,19 @@ class AccountFundingService
 
         accounts.each(&:lock!)
 
+        existing_transaction =
+          LedgerTransaction.find_by(
+            idempotency_key: idempotency_key
+          )
+
+        return existing_transaction if existing_transaction
+
         transaction = LedgerTransaction.create!(
           reference:
             "initial-funding-#{account.id}-#{SecureRandom.uuid}",
           status: "completed",
           idempotency_key:
-            "initial-funding-key-#{SecureRandom.uuid}",
+            idempotency_key,
           request_fingerprint:
             SecureRandom.uuid
         )
