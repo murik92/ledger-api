@@ -18,8 +18,9 @@ class Api::V1::IncomesController < ApplicationController
       wallet: wallet,
       category: category,
       amount_cents: income_params[:amount_cents].to_i,
-      note: income_params[:note]
-    )
+      note: income_params[:note],
+      idempotency_key: income_params[:idempotency_key]
+  )
 
   render json: {
     success: true,
@@ -35,12 +36,13 @@ class Api::V1::IncomesController < ApplicationController
 
   private
 
-  def income_params
-    params.permit(
-      :wallet_id,
-      :category_id,
-      :amount_cents,
-      :note
-    )
-  end
+    def income_params
+      params.permit(
+        :wallet_id,
+        :category_id,
+        :amount_cents,
+        :note,
+        :idempotency_key
+      )
+    end
 end

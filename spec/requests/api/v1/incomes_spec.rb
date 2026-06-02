@@ -47,14 +47,14 @@ RSpec.describe "Api::V1::Incomes", type: :request do
         wallet_id: wallet.id,
         category_id: category.id,
         amount_cents: 5000,
-        note: "Monthly salary"
+        note: "Monthly salary",
+        idempotency_key: SecureRandom.uuid
       },
       headers: {
         "Authorization" => "Bearer #{token}"
       }
 
-      puts response.body
-      
+            
       expect(response).to have_http_status(:created)
 
       json = JSON.parse(response.body)
