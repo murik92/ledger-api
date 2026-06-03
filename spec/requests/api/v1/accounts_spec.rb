@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe "Api::V1::Accounts", type: :request do
   let!(:user) do
     User.create!(
-      email: "accounts@example.com",
+      email: "#{SecureRandom.uuid}@example.com",
       password: "password123"
     )
   end

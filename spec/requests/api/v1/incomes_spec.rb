@@ -8,6 +8,7 @@ RSpec.describe "Api::V1::Incomes", type: :request do
     Category.delete_all
     Wallet.delete_all
     Account.delete_all
+    RefreshToken.delete_all
     User.delete_all
   end
 

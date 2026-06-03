@@ -1,6 +1,9 @@
 class User < ApplicationRecord
   has_secure_password
 
+  has_many :refresh_tokens,
+         dependent: :destroy
+         
   has_many :categorized_transactions,
          dependent: :restrict_with_exception
          

@@ -9,6 +9,7 @@ RSpec.describe Wallet::CreateWalletService do
     LedgerTransaction.delete_all
     AuditLog.delete_all
     Account.delete_all
+    RefreshToken.delete_all
     User.delete_all
   end
 

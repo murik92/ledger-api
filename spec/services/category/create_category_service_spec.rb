@@ -8,6 +8,7 @@ RSpec.describe Category::CreateCategoryService do
       Entry.delete_all
       LedgerTransaction.delete_all
       Account.delete_all
+      RefreshToken.delete_all
       User.delete_all
     end 
 
