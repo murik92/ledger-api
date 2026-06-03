@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_05_28_113743) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_02_130810) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -87,6 +87,19 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_28_113743) do
     t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'completed'::character varying, 'failed'::character varying]::text[])", name: "ledger_transactions_valid_status"
   end
 
+  create_table "refresh_tokens", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "token_digest", null: false
+    t.string "jti", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "revoked_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["jti"], name: "index_refresh_tokens_on_jti", unique: true
+    t.index ["token_digest"], name: "index_refresh_tokens_on_token_digest", unique: true
+    t.index ["user_id"], name: "index_refresh_tokens_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email"
     t.string "password_digest"
@@ -118,6 +131,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_28_113743) do
   add_foreign_key "categorized_transactions", "users"
   add_foreign_key "entries", "accounts"
   add_foreign_key "entries", "ledger_transactions"
+  add_foreign_key "refresh_tokens", "users"
   add_foreign_key "wallets", "accounts"
   add_foreign_key "wallets", "users"
 end

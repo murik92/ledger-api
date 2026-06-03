@@ -4,7 +4,7 @@ RSpec.describe "Api::V1::Auth", type: :request do
   describe "POST /api/v1/login" do
     let!(:user) do
       User.create!(
-        email: "login@example.com",
+        email: "#{SecureRandom.uuid}@example.com",
         password: "password123"
       )
     end
@@ -23,7 +23,14 @@ RSpec.describe "Api::V1::Auth", type: :request do
       body = JSON.parse(response.body)
 
       expect(body["status"]).to eq("success")
-      expect(body["token"]).to be_present
+
+      expect(
+        body["data"]["tokens"]["access_token"]
+      ).to be_present
+
+      expect(
+        body["data"]["tokens"]["refresh_token"]
+      ).to be_present
     end
   end
 end
