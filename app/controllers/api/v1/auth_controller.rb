@@ -11,6 +11,14 @@ class Api::V1::AuthController < ApplicationController
     user = User.find_by(email: auth_params[:email])
 
     if user&.authenticate(auth_params[:password])
+
+      unless user.confirmed?
+        return render json: {
+          status: "error",
+          message: "Email is not confirmed"
+        }, status: :unauthorized
+      end
+
       tokens = Auth::TokenIssuer.issue_tokens_for(user)
 
       render json: {
@@ -23,6 +31,7 @@ class Api::V1::AuthController < ApplicationController
           tokens: tokens
         }
       }, status: :ok
+
     else
       render json: {
         status: "error",
@@ -90,6 +99,39 @@ class Api::V1::AuthController < ApplicationController
     }, status: :ok
   end
 
+  # =========================
+  # EMAIL CONFIRMATION
+  # =========================
+  # POST /api/v1/auth/confirm
+  def confirm
+    token = params[:token]
+
+    if token.blank?
+      return render json: {
+        status: "error",
+        message: "Confirmation token missing"
+      }, status: :unprocessable_entity
+    end
+
+    user = User.find_by(
+      confirmation_token: token
+    )
+
+    unless user
+      return render json: {
+        status: "error",
+        message: "Invalid confirmation token"
+      }, status: :unprocessable_entity
+    end
+
+    user.confirm!
+
+    render json: {
+      status: "success",
+      message: "Email confirmed successfully"
+    }, status: :ok
+  end
+  
   # =========================
   # PRIVATE METHODS
   # =========================
