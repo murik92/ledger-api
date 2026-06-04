@@ -5,7 +5,8 @@ RSpec.describe "Api::V1::Auth", type: :request do
     let!(:user) do
       User.create!(
         email: "#{SecureRandom.uuid}@example.com",
-        password: "password123"
+        password: "password123",
+        confirmed_at: Time.current
       )
     end
 

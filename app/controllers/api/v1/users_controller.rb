@@ -7,6 +7,8 @@ class Api::V1::UsersController < ApplicationController
     user = User.new(user_params)
 
     if user.save
+      user.generate_confirmation_token
+      
       token = JsonWebToken.encode(
         user_id: user.id
       )

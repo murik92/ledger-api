@@ -1,3 +1,5 @@
+require "securerandom"
+
 class User < ApplicationRecord
   has_secure_password
 
@@ -19,4 +21,22 @@ class User < ApplicationRecord
   validates :email,
             presence: true,
             uniqueness: true
+
+   def confirmed?
+     confirmed_at.present?
+   end
+
+   def generate_confirmation_token
+     update!(
+       confirmation_token: SecureRandom.urlsafe_base64(32),
+       confirmation_sent_at: Time.current
+     )
+   end
+
+   def confirm!
+     update!(
+       confirmed_at: Time.current,
+       confirmation_token: nil
+     )
+   end
 end

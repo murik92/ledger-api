@@ -23,6 +23,9 @@ Rails.application.routes.draw do
       # Refresh Tokens (Task 15)
       post "auth/refresh", to: "auth#refresh"
       post "auth/logout", to: "auth#logout"
+      
+      # Email Confirmation (Task 16)
+      post "auth/confirm", to: "auth#confirm"
 
       # Accounts
       post "accounts", to: "accounts#create"
