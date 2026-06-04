@@ -31,7 +31,7 @@ class Api::V1::IncomesController < ApplicationController
     render json: {
       success: false,
       error: e.message
-    }, status: :unprocessable_entity
+    }, status: :unprocessable_content
   end
 
   private

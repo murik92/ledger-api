@@ -27,6 +27,6 @@ class ApplicationController < ActionController::API
   def handle_internal_error(error)
     render json: {
       error: error.message
-    }, status: :unprocessable_entity
+    }, status: :unprocessable_content
   end
 end
