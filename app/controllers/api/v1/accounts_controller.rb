@@ -44,7 +44,7 @@ class Api::V1::AccountsController < ApplicationController
       return render json: {
         status: "error",
         message: "Amount must be greater than 0"
-      }, status: :unprocessable_entity
+      }, status: :unprocessable_content
     end
 
     ApplicationRecord.transaction do
@@ -68,14 +68,14 @@ class Api::V1::AccountsController < ApplicationController
       return render json: {
         status: "error",
         message: "Amount must be greater than 0"
-      }, status: :unprocessable_entity
+      }, status: :unprocessable_content
     end
 
     if account.balance_cents < amount
       return render json: {
         status: "error",
         message: "Insufficient funds"
-      }, status: :unprocessable_entity
+      }, status: :unprocessable_content
     end
 
     ApplicationRecord.transaction do

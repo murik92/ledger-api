@@ -32,7 +32,7 @@ RSpec.describe "Api::V1::Auth Confirmation", type: :request do
     it "returns error when token is missing" do
       post "/api/v1/auth/confirm", params: { token: nil }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       body = JSON.parse(response.body)
       expect(body["status"]).to eq("error")
       expect(body["message"]).to eq("Confirmation token missing")
@@ -41,7 +41,7 @@ RSpec.describe "Api::V1::Auth Confirmation", type: :request do
     it "returns error when token is invalid" do
       post "/api/v1/auth/confirm", params: { token: "invalidtoken123" }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       body = JSON.parse(response.body)
       expect(body["status"]).to eq("error")
       expect(body["message"]).to eq("Invalid confirmation token")
@@ -54,7 +54,7 @@ RSpec.describe "Api::V1::Auth Confirmation", type: :request do
 
       # Второй вызов с тем же токеном
       post "/api/v1/auth/confirm", params: { token: user.confirmation_token }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       body = JSON.parse(response.body)
       expect(body["status"]).to eq("error")
       expect(body["message"]).to eq("Invalid confirmation token")

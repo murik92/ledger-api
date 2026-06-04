@@ -22,6 +22,20 @@ class User < ApplicationRecord
             presence: true,
             uniqueness: true
 
+   def generate_password_reset_token
+     update!(
+       reset_password_token: SecureRandom.urlsafe_base64(32),
+       reset_password_sent_at: Time.current
+      )
+    end
+
+    def clear_password_reset_token
+      update!(
+       reset_password_token: nil,
+       reset_password_sent_at: nil
+      )
+    end
+
    def confirmed?
      confirmed_at.present?
    end
@@ -39,4 +53,11 @@ class User < ApplicationRecord
        confirmation_token: nil
      )
    end
+
+   def password_reset_token_expired?
+     return true if reset_password_sent_at.nil?
+
+     reset_password_sent_at < 15.minutes.ago
+   end
+
 end

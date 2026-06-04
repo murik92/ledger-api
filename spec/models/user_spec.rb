@@ -54,4 +54,65 @@ RSpec.describe User, type: :model do
     expect(user.confirmation_token).to be_nil
     expect(user.confirmed?).to be(true)
   end
+
+  it "generates password reset token" do
+    user = User.create!(
+      email: "#{SecureRandom.uuid}@example.com",
+      password: "password123"
+    )
+
+    user.generate_password_reset_token
+
+    expect(user.reset_password_token).to be_present
+    expect(user.reset_password_sent_at).to be_present
+  end
+
+  it "clears password reset token" do
+    user = User.create!(
+      email: "#{SecureRandom.uuid}@example.com",
+      password: "password123"
+    )
+
+    user.generate_password_reset_token
+    user.clear_password_reset_token
+
+    expect(user.reset_password_token).to be_nil
+    expect(user.reset_password_sent_at).to be_nil
+  end
+
+  it "returns true when reset token timestamp is missing" do
+    user = User.create!(
+      email: "#{SecureRandom.uuid}@example.com",
+      password: "password123"
+    )
+
+    expect(
+      user.password_reset_token_expired?
+    ).to be(true)
+  end
+
+  it "returns false when reset token is still valid" do
+    user = User.create!(
+      email: "#{SecureRandom.uuid}@example.com",
+      password: "password123",
+      reset_password_sent_at: 10.minutes.ago
+    )
+
+    expect(
+      user.password_reset_token_expired?
+    ).to be(false)
+  end
+
+  it "returns true when reset token expired" do
+    user = User.create!(
+      email: "#{SecureRandom.uuid}@example.com",
+      password: "password123",
+      reset_password_sent_at: 20.minutes.ago
+    )
+
+    expect(
+      user.password_reset_token_expired?
+    ).to be(true)
+  end
+
 end

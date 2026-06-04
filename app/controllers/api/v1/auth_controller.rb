@@ -88,7 +88,7 @@ class Api::V1::AuthController < ApplicationController
       return render json: {
         status: "error",
         message: "Refresh token missing"
-      }, status: :unprocessable_entity
+      }, status: :unprocessable_content
     end
 
     Auth::TokenIssuer.revoke_refresh_token(current_user, refresh_token)
@@ -110,7 +110,7 @@ class Api::V1::AuthController < ApplicationController
       return render json: {
         status: "error",
         message: "Confirmation token missing"
-      }, status: :unprocessable_entity
+      }, status: :unprocessable_content
     end
 
     user = User.find_by(
@@ -121,7 +121,7 @@ class Api::V1::AuthController < ApplicationController
       return render json: {
         status: "error",
         message: "Invalid confirmation token"
-      }, status: :unprocessable_entity
+      }, status: :unprocessable_content
     end
 
     user.confirm!
@@ -132,6 +132,71 @@ class Api::V1::AuthController < ApplicationController
     }, status: :ok
   end
   
+  # =========================
+  # PASSWORD RESET REQUEST
+  # =========================
+  # POST /api/v1/auth/password_reset
+  def password_reset
+    user = User.find_by(email: params[:email])
+
+    unless user
+      return render json: {
+        status: "error",
+        message: "User not found"
+      }, status: :unprocessable_content
+    end
+
+    user.generate_password_reset_token
+
+    render json: {
+      status: "success",
+      message: "Password reset token generated"
+    }, status: :ok
+  end
+
+  # =========================
+  # RESET PASSWORD
+  # =========================
+  # POST /api/v1/auth/reset_password
+  def reset_password
+    token = params[:token]
+
+    user = User.find_by(
+      reset_password_token: token
+    )
+
+    unless user
+      return render json: {
+        status: "error",
+        message: "Invalid reset token"
+      }, status: :unprocessable_content
+    end
+
+    if user.password_reset_token_expired?
+      return render json: {
+        status: "error",
+        message: "Reset token expired"
+      }, status: :unprocessable_content
+    end
+
+    if user.update(
+      password: params[:password],
+      password_confirmation: params[:password_confirmation]
+    )
+      user.clear_password_reset_token
+
+      render json: {
+        status: "success",
+        message: "Password updated successfully"
+      }, status: :ok
+    else
+      render json: {
+        status: "error",
+        errors: user.errors.full_messages
+      }, status: :unprocessable_content
+    end
+  end
+
   # =========================
   # PRIVATE METHODS
   # =========================

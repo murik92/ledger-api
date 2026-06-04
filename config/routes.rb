@@ -26,7 +26,11 @@ Rails.application.routes.draw do
       
       # Email Confirmation (Task 16)
       post "auth/confirm", to: "auth#confirm"
-
+      
+      # Password Reset (Task 17)
+      post "auth/password_reset", to: "auth#password_reset"
+      post "auth/reset_password", to: "auth#reset_password"
+      
       # Accounts
       post "accounts", to: "accounts#create"
 
