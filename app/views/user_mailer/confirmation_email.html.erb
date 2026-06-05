@@ -1,0 +1,22 @@
+<h1>Email Confirmation</h1>
+
+<p>Hello <%= @user.email %></p>
+
+<p>
+  Please confirm your email address.
+</p>
+
+<p>
+  Click the link below:
+</p>
+
+<p>
+  <a href="<%= @confirmation_url %>">
+    Confirm Email
+  </a>
+</p>
+
+<p>
+  Confirmation token:
+  <strong><%= @user.confirmation_token %></strong>
+</p>

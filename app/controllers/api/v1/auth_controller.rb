@@ -148,6 +148,8 @@ class Api::V1::AuthController < ApplicationController
 
     user.generate_password_reset_token
 
+    UserMailer.password_reset_email(user).deliver_later
+
     render json: {
       status: "success",
       message: "Password reset token generated"

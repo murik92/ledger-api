@@ -9,6 +9,8 @@ class Api::V1::UsersController < ApplicationController
     if user.save
       user.generate_confirmation_token
       
+      UserMailer.confirmation_email(user).deliver_later
+
       token = JsonWebToken.encode(
         user_id: user.id
       )
