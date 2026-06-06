@@ -53,3 +53,5 @@ gem 'rswag-ui'
 group :test do
   gem 'faker'
 end
+
+gem "rack-attack", "~> 6.8"
