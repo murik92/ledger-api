@@ -105,4 +105,76 @@ RSpec.describe "Categories API", type: :request do
         .to have_http_status(:unprocessable_content)
     end
   end
+
+  describe "PATCH /api/v1/categories/:id" do
+    let!(:category) do
+      Category.create!(
+        user: user,
+        name: "Food",
+        category_type: "expense"
+      )
+    end
+
+    it "updates category name" do
+      patch "/api/v1/categories/#{category.id}",
+            params: {
+              category: {
+                name: "Restaurants"
+              }
+            },
+            headers: headers
+
+      expect(response).to have_http_status(:ok)
+
+      category.reload
+
+      expect(category.name)
+        .to eq("Restaurants")
+    end
+
+    it "updates category type" do
+      patch "/api/v1/categories/#{category.id}",
+            params: {
+              category: {
+                category_type: "income"
+              }
+            },
+            headers: headers
+
+      expect(response).to have_http_status(:ok)
+
+      category.reload
+
+      expect(category.category_type)
+        .to eq("income")
+    end
+  end
+
+  describe "DELETE /api/v1/categories/:id" do
+    let!(:category) do
+        Category.create!(
+        user: user,
+        name: "Food",
+        category_type: "expense"
+        )
+    end
+
+    it "deletes category" do
+        expect(Category.count).to eq(1)
+
+        delete "/api/v1/categories/#{category.id}",
+            headers: headers
+
+        expect(response)
+        .to have_http_status(:ok)
+
+        expect(Category.count)
+        .to eq(0)
+
+        body = JSON.parse(response.body)
+
+        expect(body["status"])
+        .to eq("success")
+     end
+    end
 end

@@ -12,7 +12,9 @@ Rails.application.routes.draw do
       resources :categories,
           only: [
             :index,
-            :create
+            :create,
+            :update,
+            :destroy
           ]
 
       get "health", to: "health#index"

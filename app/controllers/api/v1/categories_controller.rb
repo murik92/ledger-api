@@ -27,6 +27,43 @@ class Api::V1::CategoriesController < ApplicationController
     }, status: :created
   end
 
+  def update
+    category =
+        current_user.categories.find(
+        params[:id]
+        )
+
+    updated_category =
+        Category::UpdateCategoryService.call(
+        category: category,
+        user: current_user,
+        name: category_params[:name],
+        category_type: category_params[:category_type]
+        )
+
+    render json: {
+        status: "success",
+        data: updated_category
+    }
+    end
+
+    def destroy
+        category =
+            current_user.categories.find(
+            params[:id]
+            )
+
+        Category::DeleteCategoryService.call(
+            category: category,
+            user: current_user
+        )
+
+        render json: {
+            status: "success",
+            message: "Category deleted"
+        }, status: :ok
+    end
+
   private
 
   def category_params
