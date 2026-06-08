@@ -230,4 +230,104 @@ RSpec.describe "Transactions API", type: :request do
         .to have_http_status(:unprocessable_content)
     end
   end
+
+    describe "GET /api/v1/transactions filtering" do
+    let!(:food_transaction) do
+      ledger_transaction =
+        LedgerTransaction.create!(
+          reference: SecureRandom.uuid,
+          status: "completed",
+          idempotency_key: SecureRandom.uuid,
+          request_fingerprint: SecureRandom.uuid
+        )
+
+      CategorizedTransaction.create!(
+        user: user,
+        ledger_transaction: ledger_transaction,
+        category: expense_category,
+        transaction_type: "expense",
+        note: "Burger"
+      )
+    end
+
+    let!(:salary_transaction) do
+      ledger_transaction =
+        LedgerTransaction.create!(
+          reference: SecureRandom.uuid,
+          status: "completed",
+          idempotency_key: SecureRandom.uuid,
+          request_fingerprint: SecureRandom.uuid
+        )
+
+      CategorizedTransaction.create!(
+        user: user,
+        ledger_transaction: ledger_transaction,
+        category: income_category,
+        transaction_type: "income",
+        note: "Salary"
+      )
+    end
+
+    it "filters by transaction_type" do
+      get "/api/v1/transactions",
+          params: {
+            transaction_type: "expense"
+          },
+          headers: headers
+
+      expect(response)
+        .to have_http_status(:ok)
+
+      body = JSON.parse(response.body)
+
+      expect(body["data"].size)
+        .to eq(1)
+
+      expect(
+        body["data"].first["transaction_type"]
+      ).to eq("expense")
+    end
+
+    it "filters by category_id" do
+      get "/api/v1/transactions",
+          params: {
+            category_id: expense_category.id
+          },
+          headers: headers
+
+      expect(response)
+        .to have_http_status(:ok)
+
+      body = JSON.parse(response.body)
+
+      expect(body["data"].size)
+        .to eq(1)
+
+      expect(
+        body["data"].first["category"]
+      ).to eq("Food")
+    end
+
+    it "combines multiple filters" do
+      get "/api/v1/transactions",
+          params: {
+            transaction_type: "income",
+            category_id: income_category.id
+          },
+          headers: headers
+
+      expect(response)
+        .to have_http_status(:ok)
+
+      body = JSON.parse(response.body)
+
+      expect(body["data"].size)
+        .to eq(1)
+
+      expect(
+        body["data"].first["transaction_type"]
+      ).to eq("income")
+    end
+  end
+
 end
