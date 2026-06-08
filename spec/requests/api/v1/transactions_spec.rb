@@ -140,4 +140,94 @@ RSpec.describe "Transactions API", type: :request do
         .to eq(0)
     end
   end
+
+  describe "GET /api/v1/transactions/:id" do
+    let!(:transaction_record) do
+        ledger_transaction =
+        LedgerTransaction.create!(
+            reference: SecureRandom.uuid,
+            status: "completed",
+            idempotency_key: SecureRandom.uuid,
+            request_fingerprint: SecureRandom.uuid
+        )
+
+        CategorizedTransaction.create!(
+        user: user,
+        ledger_transaction: ledger_transaction,
+        category: expense_category,
+        transaction_type: "expense",
+        note: "Lunch"
+        )
+    end
+
+    it "returns transaction details" do
+        get "/api/v1/transactions/#{transaction_record.id}",
+            headers: headers
+
+        expect(response)
+        .to have_http_status(:ok)
+
+        body = JSON.parse(response.body)
+
+        expect(body["status"])
+        .to eq("success")
+
+        expect(
+        body["data"]["transaction_type"]
+        ).to eq("expense")
+
+        expect(
+        body["data"]["category"]
+        ).to eq("Food")
+
+        expect(
+        body["data"]["note"]
+        ).to eq("Lunch")
+    end
+
+    it "returns unauthorized without token" do
+        get "/api/v1/transactions/#{transaction_record.id}"
+
+        expect(response)
+        .to have_http_status(:unauthorized)
+    end
+
+    it "does not allow access to another user's transaction" do
+        another_user =
+        User.create!(
+            email: "#{SecureRandom.uuid}@example.com",
+            password: "password123"
+        )
+
+        another_category =
+        Category.create!(
+            user: another_user,
+            name: "Private",
+            category_type: "expense"
+        )
+
+        another_ledger_transaction =
+        LedgerTransaction.create!(
+            reference: SecureRandom.uuid,
+            status: "completed",
+            idempotency_key: SecureRandom.uuid,
+            request_fingerprint: SecureRandom.uuid
+        )
+
+        another_transaction =
+        CategorizedTransaction.create!(
+            user: another_user,
+            ledger_transaction: another_ledger_transaction,
+            category: another_category,
+            transaction_type: "expense",
+            note: "Secret"
+        )
+
+        get "/api/v1/transactions/#{another_transaction.id}",
+            headers: headers
+
+        expect(response)
+        .to have_http_status(:unprocessable_content)
+    end
+  end
 end

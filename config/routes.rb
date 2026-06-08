@@ -20,6 +20,7 @@ Rails.application.routes.draw do
       get "health", to: "health#index"
       
       get "transactions", to: "transactions#index"
+      get "transactions/:id", to: "transactions#show"
 
       post "accounts/:id/deposit", to: "accounts#deposit"
       post "accounts/:id/withdraw", to: "accounts#withdraw"
