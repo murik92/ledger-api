@@ -9,6 +9,14 @@ Rails.application.routes.draw do
       resources :expenses, only: [:create]
       resources :incomes, only: [:create]
 
+      resources :categories,
+          only: [
+            :index,
+            :create,
+            :update,
+            :destroy
+          ]
+
       get "health", to: "health#index"
 
       post "accounts/:id/deposit", to: "accounts#deposit"
