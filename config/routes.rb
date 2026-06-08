@@ -21,7 +21,8 @@ Rails.application.routes.draw do
       
       get "transactions", to: "transactions#index"
       get "transactions/:id", to: "transactions#show"
-
+      post "transactions", to: "transactions#create"
+      
       post "accounts/:id/deposit", to: "accounts#deposit"
       post "accounts/:id/withdraw", to: "accounts#withdraw"
 
