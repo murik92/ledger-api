@@ -3,24 +3,59 @@ class Api::V1::TransactionsController < ApplicationController
 
   def index
     transactions =
-      CategorizedTransaction
+        CategorizedTransaction
         .includes(:category)
         .where(user: current_user)
-        .order(created_at: :desc)
 
-    render json: {
-      status: "success",
-      data: transactions.map { |transaction|
-        {
-          id: transaction.id,
-          transaction_type: transaction.transaction_type,
-          category: transaction.category.name,
-          note: transaction.note,
-          created_at: transaction.created_at
-        }
-      }
+        if params[:transaction_type].present?
+            transactions =
+            transactions.where(
+            transaction_type:
+            params[:transaction_type]
+        )
+    end
+
+    if params[:category_id].present?
+        transactions =
+        transactions.where(
+        category_id:
+        params[:category_id]
+    )
+    end
+
+    if params[:date_from].present?
+        transactions =
+        transactions.where(
+        "created_at >= ?",
+        Date.parse(params[:date_from])
+    )
+    end
+
+    if params[:date_to].present?
+        transactions =
+        transactions.where(
+        "created_at <= ?",
+        Date.parse(params[:date_to]).end_of_day
+    )
+    end
+
+    transactions =
+        transactions.order(created_at: :desc)
+
+        render json: {
+            status: "success",
+            data: transactions.map { |transaction|
+            {
+            id: transaction.id,
+            transaction_type: transaction.transaction_type,
+            category: transaction.category.name,
+            note: transaction.note,
+            created_at: transaction.created_at
+            }
+            }
     }
   end
+
 
   def show
     transaction =
