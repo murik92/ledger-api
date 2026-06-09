@@ -7,6 +7,7 @@ class Transactions::CreateIncomeTransactionService
     note:,
     idempotency_key:
   )
+
     unless category.category_type_income?
       raise ArgumentError, "Category must be income type"
     end
@@ -20,28 +21,55 @@ class Transactions::CreateIncomeTransactionService
         idempotency_key: idempotency_key
       )
 
-    return existing_transaction if existing_transaction
+    if existing_transaction
+      return CategorizedTransaction.find_by!(
+        ledger_transaction: existing_transaction
+      )
+    end
 
-    ledger_transaction = LedgerTransaction.create!(
-      reference: SecureRandom.uuid,
-      status: "completed",
-      idempotency_key: idempotency_key,
-      request_fingerprint: SecureRandom.uuid
-    )
+    ActiveRecord::Base.transaction do
+      wallet.account.lock!
 
-    wallet.account.reload
+      income_account =
+        Account.income_account
 
-    wallet.account.update!(
-      balance_cents:
-        wallet.account.balance_cents + amount_cents
-    )
+      ledger_transaction =
+        LedgerTransaction.create!(
+          reference: SecureRandom.uuid,
+          status: "completed",
+          idempotency_key: idempotency_key,
+          request_fingerprint: SecureRandom.uuid
+        )
 
-    CategorizedTransaction.create!(
-      user: user,
-      category: category,
-      ledger_transaction: ledger_transaction,
-      transaction_type: "income",
-      note: note
-    )
+      Entry.create!(
+        account: income_account,
+        ledger_transaction: ledger_transaction,
+        amount_cents: -amount_cents,
+        entry_type: "debit"
+      )
+
+      Entry.create!(
+        account: wallet.account,
+        ledger_transaction: ledger_transaction,
+        amount_cents: amount_cents,
+        entry_type: "credit"
+      )
+
+      wallet.account.update!(
+        balance_cents:
+          wallet.account.balance_cents + amount_cents
+      )
+
+      categorized_transaction =
+      CategorizedTransaction.create!(
+        user: user,
+        category: category,
+        ledger_transaction: ledger_transaction,
+        transaction_type: "income",
+        note: note
+      )
+
+    categorized_transaction
+    end
   end
 end

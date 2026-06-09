@@ -25,29 +25,55 @@ class Transactions::CreateExpenseTransactionService
         idempotency_key: idempotency_key
       )
 
-    return existing_transaction if existing_transaction
+    if existing_transaction
+      return CategorizedTransaction.find_by!(
+        ledger_transaction: existing_transaction
+      )
+    end
 
-    ledger_transaction = LedgerTransaction.create!(
-      reference: SecureRandom.uuid,
-      status: "completed",
-      idempotency_key: idempotency_key,
-      request_fingerprint: SecureRandom.uuid
-    )
+    ActiveRecord::Base.transaction do
+      wallet.account.lock!
 
-    wallet.account.reload
+      expense_account =
+        Account.expense_account
 
-    wallet.account.update!(
-      balance_cents:
-        wallet.account.balance_cents - amount_cents
-    )
-    
-    CategorizedTransaction.create!(
-      user: user,
-      category: category,
-      ledger_transaction: ledger_transaction,
-      transaction_type: "expense",
-      note: note
-    )
+      ledger_transaction =
+        LedgerTransaction.create!(
+          reference: SecureRandom.uuid,
+          status: "completed",
+          idempotency_key: idempotency_key,
+          request_fingerprint: SecureRandom.uuid
+        )
+
+      Entry.create!(
+        account: wallet.account,
+        ledger_transaction: ledger_transaction,
+        amount_cents: -amount_cents,
+        entry_type: "credit"
+      )
+
+      Entry.create!(
+        account: expense_account,
+        ledger_transaction: ledger_transaction,
+        amount_cents: amount_cents,
+        entry_type: "debit"
+      )
+
+      wallet.account.update!(
+        balance_cents:
+          wallet.account.balance_cents - amount_cents
+      )
+
+      categorized_transaction =
+      CategorizedTransaction.create!(
+        user: user,
+        category: category,
+        ledger_transaction: ledger_transaction,
+        transaction_type: "expense",
+        note: note
+      )
+
+    categorized_transaction
+    end
   end
 end
-
