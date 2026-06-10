@@ -34,5 +34,26 @@ class Account < ApplicationRecord
       account.opening_balance_cents = 0
     end
   end
+
+  def self.expense_account
+    find_or_create_by!(
+      name: "EXPENSE"
+    ) do |account|
+      account.currency = "USD"
+      account.balance_cents = 0
+      account.opening_balance_cents = 0
+    end
+  end
+
+  def self.income_account
+    find_or_create_by!(
+      name: "INCOME"
+    ) do |account|
+      account.currency = "USD"
+      account.balance_cents = 0
+      account.opening_balance_cents = 0
+    end
+  end
+
 end
 

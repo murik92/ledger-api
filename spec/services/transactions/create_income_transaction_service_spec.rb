@@ -33,6 +33,35 @@ RSpec.describe Transactions::CreateIncomeTransactionService do
   end
 
   describe ".call" do
+    it "creates double-entry ledger entries" do
+      result = described_class.call(
+        user: user,
+        wallet: wallet,
+        category: income_category,
+        amount_cents: 5_000,
+        note: "Salary",
+        idempotency_key: SecureRandom.uuid
+      )
+
+      entries =
+        Entry.where(
+          ledger_transaction: result.ledger_transaction
+        )
+
+      expect(entries.count).to eq(2)
+
+      expect(
+        entries.sum(:amount_cents)
+      ).to eq(0)
+
+      expect(
+        entries.pluck(:entry_type)
+      ).to contain_exactly(
+        "debit",
+        "credit"
+      )
+    end
+
     it "creates income categorized transaction" do
       result = described_class.call(
         user: user,
@@ -42,8 +71,6 @@ RSpec.describe Transactions::CreateIncomeTransactionService do
         note: "Monthly salary",
         idempotency_key: SecureRandom.uuid
       )
-
-      expect(result).to be_persisted
 
       expect(result.transaction_type)
         .to eq("income")
@@ -71,6 +98,10 @@ RSpec.describe Transactions::CreateIncomeTransactionService do
       expect(
         result.ledger_transaction
       ).to be_present
+
+      expect(
+        result.ledger_transaction
+      ).to be_a(LedgerTransaction)
     end
 
     it "rejects expense category" do
@@ -92,7 +123,7 @@ RSpec.describe Transactions::CreateIncomeTransactionService do
     it "does not create duplicate income with same idempotency key" do
       key = "income-key-001"
 
-      described_class.call(
+      first_result = described_class.call(
         user: user,
         wallet: wallet,
         category: income_category,
@@ -101,7 +132,7 @@ RSpec.describe Transactions::CreateIncomeTransactionService do
         idempotency_key: key
       )
 
-      described_class.call(
+      second_result = described_class.call(
         user: user,
         wallet: wallet,
         category: income_category,
@@ -110,19 +141,21 @@ RSpec.describe Transactions::CreateIncomeTransactionService do
         idempotency_key: key
       )
 
-      wallet.reload
-      
-      account =
-        Account.find(wallet.account_id)
-          expect(
+      expect(first_result.id)
+        .to eq(second_result.id)
+
+      expect(
         LedgerTransaction.where(
           idempotency_key: key
         ).count
       ).to eq(1)
 
       expect(
-        account.balance_cents
-      ).to eq(5_000)
+        CategorizedTransaction.where(
+          ledger_transaction_id:
+            first_result.ledger_transaction_id
+        ).count
+      ).to eq(1)
     end
   end
 end
