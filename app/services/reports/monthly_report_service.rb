@@ -18,31 +18,55 @@ module Reports
               start_date..end_date
           )
 
+      income_count =
+        transactions
+          .income
+          .count
+
+      expense_count =
+        transactions
+          .expenses
+          .count
+
       income_cents =
         transactions
-          .where(
-            transaction_type: "income"
+          .income
+          .joins(
+            ledger_transaction: :entries
           )
-          .joins(:ledger_transaction)
+          .where(
+            entries: {
+              account_id:
+                Account.income_account.id
+            }
+          )
           .sum(
-            "ledger_transactions.amount_cents"
+            "ABS(entries.amount_cents)"
           )
 
       expense_cents =
         transactions
-          .where(
-            transaction_type: "expense"
+          .expenses
+          .joins(
+            ledger_transaction: :entries
           )
-          .joins(:ledger_transaction)
+          .where(
+            entries: {
+              account_id:
+                Account.expense_account.id
+            }
+          )
           .sum(
-            "ledger_transactions.amount_cents"
+            "ABS(entries.amount_cents)"
           )
 
       {
         month: month,
+        income_transactions: income_count,
+        expense_transactions: expense_count,
         income_cents: income_cents,
         expense_cents: expense_cents,
-        balance_cents:
+        net_cashflow_cents:
           income_cents - expense_cents
       }
     end

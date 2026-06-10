@@ -19,14 +19,47 @@ class Api::V1::ReportsController < ApplicationController
   end
 
   def cashflow
+    report =
+      Reports::CashflowReportService.call(
+        user: current_user,
+        from: parsed_from_date,
+        to: parsed_to_date
+      )
+
     render json: {
-      message: "not implemented yet"
+      status: "success",
+      data: report
     }
   end
 
   def by_category
+    report =
+      Reports::CategoryReportService.call(
+        user: current_user,
+        from: parsed_from_date,
+        to: parsed_to_date,
+        transaction_type: transaction_type
+      )
+
     render json: {
-      message: "not implemented yet"
+      status: "success",
+      data: report
     }
+  end
+
+  private
+
+  def parsed_from_date
+    params[:from]&.to_date ||
+      Date.current.beginning_of_month
+  end
+
+  def parsed_to_date
+    params[:to]&.to_date ||
+      Date.current.end_of_month
+  end
+
+  def transaction_type
+    params[:transaction_type] || "expense"
   end
 end
