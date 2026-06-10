@@ -19,6 +19,15 @@ Rails.application.routes.draw do
 
       get "health", to: "health#index"
       
+      get "reports/monthly",
+        to: "reports#monthly"
+
+      get "reports/cashflow",
+          to: "reports#cashflow"
+
+      get "reports/by_category",
+          to: "reports#by_category"      
+
       get "transactions", to: "transactions#index"
       get "transactions/:id", to: "transactions#show"
       post "transactions", to: "transactions#create"

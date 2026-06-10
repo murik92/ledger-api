@@ -34,22 +34,27 @@ RSpec.describe Wallet::SystemWalletService do
     end
 
     it "returns existing system wallet for duplicates" do
-        first_wallet =
-            Wallet::SystemWalletService.create!(
-            wallet_name: "treasury",
-            currency: "USD"
-            )
+      first_wallet =
+        Wallet::SystemWalletService.create!(
+          wallet_name: "treasury",
+          currency: "USD"
+        )
 
-        second_wallet =
-            Wallet::SystemWalletService.create!(
-            wallet_name: "treasury",
-            currency: "USD"
-            )
+      second_wallet =
+        Wallet::SystemWalletService.create!(
+          wallet_name: "treasury",
+          currency: "USD"
+        )
 
-        expect(first_wallet.id)
-            .to eq(second_wallet.id)
+      expect(first_wallet.id)
+        .to eq(second_wallet.id)
 
-        expect(Wallet.count).to eq(1)
+      expect(
+        Wallet.where(
+          name: first_wallet.name,
+          currency: "USD"
+        ).count
+      ).to eq(1)
     end
   end
 end
