@@ -4,15 +4,524 @@ info:
   title: API V1
   version: v1
 paths:
+  "/api/v1/accounts":
+    get:
+      summary: List accounts
+      tags:
+      - Accounts
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: returns user accounts
+        '401':
+          description: unauthorized
+    post:
+      summary: Create account
+      tags:
+      - Accounts
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '201':
+          description: account created
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                account:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    currency:
+                      type: string
+                  required:
+                  - name
+                  - currency
+              required:
+              - account
+  "/api/v1/accounts/{id}/deposit":
+    post:
+      summary: Deposit to account
+      tags:
+      - Accounts
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: deposit successful
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount_cents:
+                  type: integer
+              required:
+              - amount_cents
+  "/api/v1/accounts/{id}/withdraw":
+    post:
+      summary: Withdraw from account
+      tags:
+      - Accounts
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: withdraw successful
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount_cents:
+                  type: integer
+              required:
+              - amount_cents
+  "/api/v1/accounts/{id}":
+    get:
+      summary: Show account
+      tags:
+      - Accounts
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: returns account details
+  "/api/v1/login":
+    post:
+      summary: Login user
+      tags:
+      - Auth
+      parameters: []
+      responses:
+        '200':
+          description: login successful
+        '401':
+          description: invalid credentials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                auth:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                    password:
+                      type: string
+                  required:
+                  - email
+                  - password
+  "/api/v1/auth/refresh":
+    post:
+      summary: Refresh access token
+      tags:
+      - Auth
+      parameters: []
+      responses:
+        '200':
+          description: token refreshed
+        '401':
+          description: invalid token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+              required:
+              - refresh_token
+  "/api/v1/auth/logout":
+    post:
+      summary: Logout user
+      tags:
+      - Auth
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        description: Bearer access token
+        schema:
+          type: string
+      responses:
+        '200':
+          description: logout successful
+        '401':
+          description: unauthorized
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+              required:
+              - refresh_token
+  "/api/v1/categories":
+    get:
+      summary: List categories
+      tags:
+      - Categories
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: categories list
+        '401':
+          description: unauthorized
+    post:
+      summary: Create category
+      tags:
+      - Categories
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '201':
+          description: category created
+        '422':
+          description: duplicate category
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    category_type:
+                      type: string
+                      enum:
+                      - income
+                      - expense
+                  required:
+                  - name
+                  - category_type
+              required:
+              - category
+  "/api/v1/categories/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    patch:
+      summary: Update category
+      tags:
+      - Categories
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: category updated
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    category_type:
+                      type: string
+                      enum:
+                      - income
+                      - expense
+              required:
+              - category
+    delete:
+      summary: Delete category
+      tags:
+      - Categories
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: category deleted
+  "/api/v1/expenses":
+    post:
+      summary: Create expense
+      tags:
+      - Expenses
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '201':
+          description: expense created
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                wallet_id:
+                  type: integer
+                category_id:
+                  type: integer
+                amount_cents:
+                  type: integer
+                note:
+                  type: string
+                idempotency_key:
+                  type: string
+              required:
+              - wallet_id
+              - category_id
+              - amount_cents
+              - idempotency_key
+  "/api/v1/incomes":
+    post:
+      summary: Create income
+      tags:
+      - Incomes
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '201':
+          description: income created
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                wallet_id:
+                  type: integer
+                category_id:
+                  type: integer
+                amount_cents:
+                  type: integer
+                note:
+                  type: string
+                idempotency_key:
+                  type: string
+              required:
+              - wallet_id
+              - category_id
+              - amount_cents
+              - idempotency_key
+  "/api/v1/reports/monthly":
+    get:
+      summary: Monthly report
+      tags:
+      - Reports
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: returns monthly report
+        '401':
+          description: unauthorized
+  "/api/v1/reports/cashflow":
+    get:
+      summary: Cashflow report
+      tags:
+      - Reports
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: returns cashflow report
+        '401':
+          description: unauthorized
+  "/api/v1/reports/by_category":
+    get:
+      summary: Category report
+      tags:
+      - Reports
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: transaction_type
+        in: query
+        required: false
+        enum:
+        - income
+        - expense
+        schema:
+          type: string
+        description: ":\n * `income` \n * `expense` \n "
+      responses:
+        '200':
+          description: returns category report
+        '401':
+          description: unauthorized
+  "/api/v1/transactions":
+    get:
+      summary: List transactions
+      tags:
+      - Transactions
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: returns all user transactions
+        '401':
+          description: unauthorized
+    post:
+      summary: Create transaction
+      tags:
+      - Transactions
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '201':
+          description: transaction created
+        '422':
+          description: invalid transaction type
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                transaction_type:
+                  type: string
+                  enum:
+                  - income
+                  - expense
+                wallet_id:
+                  type: integer
+                category_id:
+                  type: integer
+                amount_cents:
+                  type: integer
+                note:
+                  type: string
+                idempotency_key:
+                  type: string
+              required:
+              - transaction_type
+              - wallet_id
+              - category_id
+              - amount_cents
+              - idempotency_key
+  "/api/v1/transactions/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Retrieve transaction
+      tags:
+      - Transactions
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: transaction details
+        '401':
+          description: unauthorized
   "/api/v1/transfers":
     post:
-      summary: Creates money transfer
+      summary: Create transfer
       tags:
       - Transfers
       parameters:
-      - name: Idempotency-Key
+      - name: Authorization
         in: header
-        required: false
+        required: true
         schema:
           type: string
       responses:
@@ -32,12 +541,12 @@ paths:
                   type: integer
                 amount_cents:
                   type: integer
-                reference:
+                idempotency_key:
                   type: string
               required:
               - from_account_id
               - to_account_id
               - amount_cents
-              - reference
+              - idempotency_key
 servers:
 - url: http://localhost:3000
