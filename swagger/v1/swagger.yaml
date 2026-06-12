@@ -128,6 +128,27 @@ paths:
       responses:
         '200':
           description: returns account details
+  "/api/v1/auth/confirm":
+    post:
+      summary: Confirm user email
+      tags:
+      - Auth
+      parameters: []
+      responses:
+        '200':
+          description: email confirmed
+        '422':
+          description: invalid confirmation token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+              required:
+              - token
   "/api/v1/login":
     post:
       summary: Login user
@@ -203,6 +224,38 @@ paths:
                   type: string
               required:
               - refresh_token
+  "/api/v1/register":
+    post:
+      summary: Register user
+      tags:
+      - Auth
+      parameters: []
+      responses:
+        '201':
+          description: user registered
+        '422':
+          description: invalid registration data
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                    password:
+                      type: string
+                    password_confirmation:
+                      type: string
+                  required:
+                  - email
+                  - password
+                  - password_confirmation
+              required:
+              - user
   "/api/v1/categories":
     get:
       summary: List categories
@@ -341,6 +394,14 @@ paths:
               - category_id
               - amount_cents
               - idempotency_key
+  "/api/v1/health":
+    get:
+      summary: Health check
+      tags:
+      - System
+      responses:
+        '200':
+          description: service is healthy
   "/api/v1/incomes":
     post:
       summary: Create income
@@ -376,6 +437,54 @@ paths:
               - category_id
               - amount_cents
               - idempotency_key
+  "/api/v1/auth/password_reset":
+    post:
+      summary: Request password reset
+      tags:
+      - Auth
+      parameters: []
+      responses:
+        '200':
+          description: password reset token generated
+        '422':
+          description: unknown email
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+              required:
+              - email
+  "/api/v1/auth/reset_password":
+    post:
+      summary: Reset password
+      tags:
+      - Auth
+      parameters: []
+      responses:
+        '200':
+          description: password updated
+        '422':
+          description: invalid reset token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                password:
+                  type: string
+                password_confirmation:
+                  type: string
+              required:
+              - token
+              - password
+              - password_confirmation
   "/api/v1/reports/monthly":
     get:
       summary: Monthly report
